@@ -1,6 +1,7 @@
 package com.marathonplus.backend.services;
 
 
+import com.marathonplus.backend.exception.UserAlreadyExistsException;
 import com.marathonplus.backend.models.UserModel;
 import com.marathonplus.backend.repositories.IUserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class UserService {
 
 
     public UserModel saveUser(UserModel user) {
+        if (userRepository.existsByEmail(user.getEmail())) {
+            throw new UserAlreadyExistsException("Email is already registered");
+        }
         return userRepository.save(user);
     }
     public Optional<UserModel> getById(Long id) {
@@ -48,5 +52,12 @@ public class UserService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    public boolean authenticateUser(String email, String password) {
+        UserModel user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        return user.getPassword().equals(password);
     }
 }
